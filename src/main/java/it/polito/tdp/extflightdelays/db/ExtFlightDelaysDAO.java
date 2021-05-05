@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import it.polito.tdp.extflightdelays.model.Adiacenze;
 import it.polito.tdp.extflightdelays.model.Airline;
 import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Flight;
@@ -90,5 +91,33 @@ public class ExtFlightDelaysDAO {
 			System.out.println("Errore connessione al database");
 			throw new RuntimeException("Error Connection Database");
 		}
+	}
+	 
+	public List<Adiacenze> getAllArchi(int distance){
+		String sql = "SELECT f.ORIGIN_AIRPORT_ID AS origine, f.DESTINATION_AIRPORT_ID AS destinazione, COUNT(*) AS tot,AVG(distance) AS media "
+				+ "FROM flights f "
+				+ "GROUP BY origine, destinazione "
+				+ "HAVING AVG(distance) > ?";
+		List<Adiacenze> result = new LinkedList<>();
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, distance);
+			ResultSet rs = st.executeQuery();
+			
+			while(rs.next()) {
+				Adiacenze a = new Adiacenze(rs.getInt("origine"), rs.getInt("destinazione"), rs.getInt("media"), rs.getInt("tot"));
+				result.add(a);
+				
+			}
+			
+			st.close();
+			rs.close();
+			conn.close();
+			
+		}catch(SQLException e) {
+			throw new RuntimeException("Errore apertura DB");
+		}
+		return result;
 	}
 }
